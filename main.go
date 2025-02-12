@@ -2,6 +2,7 @@ package tenms_otel_go
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/tenminschool/tenms-otel-go/config"
 	"github.com/tenminschool/tenms-otel-go/metrics"
@@ -21,15 +22,22 @@ func NewTenMsOtel(serviceName string, insecureMode string, OtelExporterOtlpEndpo
 	}}
 
 }
-func (tenmsOtel *TenMsOtel) Init(Router *gin.Engine) {
-	cleanup := tracer.InitTracer(tenmsOtel.tenMsOtelConfig)
-	defer cleanup(context.Background())
+func (tenmsOtel *TenMsOtel) Init(Router *gin.Engine) func() {
+	shutDownTracer := tracer.InitTracer(tenmsOtel.tenMsOtelConfig)
 
-	provider := metrics.InitMeter(tenmsOtel.tenMsOtelConfig)
-	defer provider.Shutdown(context.Background())
+	meterProvider := metrics.InitMeter(tenmsOtel.tenMsOtelConfig)
 
-	meter := provider.Meter(tenmsOtel.tenMsOtelConfig.ServiceName)
+	meter := meterProvider.Meter(tenmsOtel.tenMsOtelConfig.ServiceName)
 	metrics.GenerateMetrics(meter)
 
 	Router.Use(otelgin.Middleware(tenmsOtel.tenMsOtelConfig.ServiceName))
+	return func() {
+		if err := shutDownTracer(context.Background()); err != nil {
+			fmt.Println("error in shut down tracer")
+		}
+
+		if err := meterProvider.Shutdown(context.Background()); err != nil {
+			fmt.Println("error in shut down meterProvider")
+		}
+	}
 }

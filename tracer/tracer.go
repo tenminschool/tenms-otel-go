@@ -15,7 +15,6 @@ import (
 )
 
 func InitTracer(config *config.TenMsOtelConfig) func(context.Context) error {
-
 	var secureOption otlptracegrpc.Option
 
 	if strings.ToLower(config.InsecureMode) == "false" || config.InsecureMode == "0" || strings.ToLower(config.InsecureMode) == "f" {
