@@ -31,6 +31,7 @@ func (tenmsOtel *TenMsOtel) Init(Router *gin.Engine) func() {
 	metrics.GenerateMetrics(meter)
 
 	Router.Use(otelgin.Middleware(tenmsOtel.tenMsOtelConfig.ServiceName))
+	fmt.Printf("Tenms otel initialized with service_name %s, insecure mode %s, OtelExporterOtlpEndpoint %s", tenmsOtel.tenMsOtelConfig.ServiceName, tenmsOtel.tenMsOtelConfig.InsecureMode, tenmsOtel.tenMsOtelConfig.OtelExporterOtlpEndpoint)
 	return func() {
 		if err := shutDownTracer(context.Background()); err != nil {
 			fmt.Println("error in shut down tracer")
