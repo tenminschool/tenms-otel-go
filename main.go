@@ -35,10 +35,14 @@ func (tenmsOtel *TenMsOtel) Init(Router *gin.Engine) func() {
 	return func() {
 		if err := shutDownTracer(context.Background()); err != nil {
 			fmt.Println("error in shut down tracer")
+		} else {
+			fmt.Println("tracer shut down properly")
 		}
 
 		if err := meterProvider.Shutdown(context.Background()); err != nil {
 			fmt.Println("error in shut down meterProvider")
+		} else {
+			fmt.Println("meter provider shut down properly")
 		}
 	}
 }
