@@ -2,7 +2,12 @@ package tracer
 
 import (
 	"context"
-	"github.com/tenminschool/tenms-otel-go/config"
+	"crypto/tls"
+	"log"
+	"strings"
+
+	"github.com/tenminschool/lxp-service/otel/config"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -10,15 +15,14 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc/credentials"
-	"log"
-	"strings"
 )
 
 func InitTracer(config *config.TenMsOtelConfig) func(context.Context) error {
 	var secureOption otlptracegrpc.Option
 
-	if strings.ToLower(config.InsecureMode) == "false" || config.InsecureMode == "0" || strings.ToLower(config.InsecureMode) == "f" {
-		secureOption = otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
+	if strings.ToLower(config.InsecureMode) == "false" || config.InsecureMode == "0" ||
+		strings.ToLower(config.InsecureMode) == "f" {
+		secureOption = otlptracegrpc.WithTLSCredentials(credentials.NewTLS(&tls.Config{}))
 	} else {
 		secureOption = otlptracegrpc.WithInsecure()
 	}

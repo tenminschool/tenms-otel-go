@@ -1,4 +1,4 @@
-package tenms_otel_go
+package otel
 
 import (
 	"context"
@@ -20,29 +20,41 @@ func NewTenMsOtel(serviceName string, insecureMode string, OtelExporterOtlpEndpo
 		InsecureMode:             insecureMode,
 		OtelExporterOtlpEndpoint: OtelExporterOtlpEndpoint,
 	}}
-
 }
-func (tenmsOtel *TenMsOtel) Init(Router *gin.Engine) func() {
+
+func (tenmsOtel *TenMsOtel) Init(
+	Router *gin.Engine,
+) func(ctx context.Context) {
 	shutDownTracer := tracer.InitTracer(tenmsOtel.tenMsOtelConfig)
 
-	meterProvider := metrics.InitMeter(tenmsOtel.tenMsOtelConfig)
+	meterProvider := metrics.InitMeter()
 
 	meter := meterProvider.Meter(tenmsOtel.tenMsOtelConfig.ServiceName)
 	metrics.GenerateMetrics(meter)
 
-	Router.Use(otelgin.Middleware(tenmsOtel.tenMsOtelConfig.ServiceName))
-	fmt.Printf("Tenms otel initialized with service_name %s, insecure mode %s, OtelExporterOtlpEndpoint %s\n", tenmsOtel.tenMsOtelConfig.ServiceName, tenmsOtel.tenMsOtelConfig.InsecureMode, tenmsOtel.tenMsOtelConfig.OtelExporterOtlpEndpoint)
-	return func() {
-		if err := shutDownTracer(context.Background()); err != nil {
+	// Router.Use(otelgin.Middleware(serviceName))
+	RegisterMiddleware(Router, tenmsOtel.tenMsOtelConfig.ServiceName)
+	fmt.Printf(
+		"Tenms otel initialized with service_name %s, insecure mode %s, OtelExporterOtlpEndpoint %s\n",
+		tenmsOtel.tenMsOtelConfig.ServiceName,
+		tenmsOtel.tenMsOtelConfig.InsecureMode,
+		tenmsOtel.tenMsOtelConfig.OtelExporterOtlpEndpoint,
+	)
+	return func(ctx context.Context) {
+		if err := shutDownTracer(ctx); err != nil {
 			fmt.Println("error in shut down tracer")
 		} else {
 			fmt.Println("tracer shut down properly")
 		}
 
-		if err := meterProvider.Shutdown(context.Background()); err != nil {
+		if err := meterProvider.Shutdown(ctx); err != nil {
 			fmt.Println("error in shut down meterProvider")
 		} else {
 			fmt.Println("meter provider shut down properly")
 		}
 	}
+}
+
+func RegisterMiddleware(Router *gin.Engine, serviceName string) {
+	Router.Use(otelgin.Middleware(serviceName))
 }

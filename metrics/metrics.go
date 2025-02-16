@@ -2,10 +2,11 @@ package metrics
 
 import (
 	"context"
-	"github.com/tenminschool/tenms-otel-go/config"
 	"log"
 	"math/rand"
 	"time"
+
+	"github.com/tenminschool/lxp-service/config"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -192,16 +193,16 @@ func processHeapSizeUpDownCounter(meter api.Meter) {
 	}
 }
 
-func InitMeter(tenMsOtelConfig *config.TenMsOtelConfig) *metricsdk.MeterProvider {
+func InitMeter() *metricsdk.MeterProvider {
 	secureOption := otlpmetricgrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
-	if len(tenMsOtelConfig.InsecureMode) > 0 {
+	if len(config.LxpOtelConfig.InsecureMode) > 0 {
 		secureOption = otlpmetricgrpc.WithInsecure()
 	}
 
 	exporter, err := otlpmetricgrpc.New(
 		context.Background(),
 		secureOption,
-		otlpmetricgrpc.WithEndpoint(tenMsOtelConfig.OtelExporterOtlpEndpoint),
+		otlpmetricgrpc.WithEndpoint(config.LxpOtelConfig.OtelExporterOtlpEndpoint),
 	)
 	if err != nil {
 		log.Fatalf("Failed to create exporter: %v", err)
@@ -210,7 +211,7 @@ func InitMeter(tenMsOtelConfig *config.TenMsOtelConfig) *metricsdk.MeterProvider
 	res, err := resource.New(
 		context.Background(),
 		resource.WithAttributes(
-			attribute.String("service.name", tenMsOtelConfig.ServiceName),
+			attribute.String("service.name", config.LxpConfig.Name),
 			attribute.String("library.language", "go"),
 		),
 	)
