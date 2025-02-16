@@ -27,7 +27,7 @@ func (tenmsOtel *TenMsOtel) Init(
 ) func(ctx context.Context) {
 	shutDownTracer := tracer.InitTracer(tenmsOtel.tenMsOtelConfig)
 
-	meterProvider := metrics.InitMeter()
+	meterProvider := metrics.InitMeter(tenmsOtel.tenMsOtelConfig)
 
 	meter := meterProvider.Meter(tenmsOtel.tenMsOtelConfig.ServiceName)
 	metrics.GenerateMetrics(meter)

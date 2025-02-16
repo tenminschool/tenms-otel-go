@@ -2,18 +2,16 @@ package metrics
 
 import (
 	"context"
-	"log"
-	"math/rand"
-	"time"
-
-	"github.com/tenminschool/lxp-service/config"
-
+	"github.com/tenminschool/tenms-otel-go/config"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	api "go.opentelemetry.io/otel/metric"
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"google.golang.org/grpc/credentials"
+	"log"
+	"math/rand"
+	"time"
 )
 
 // Example use cases for sync counter
@@ -193,16 +191,16 @@ func processHeapSizeUpDownCounter(meter api.Meter) {
 	}
 }
 
-func InitMeter() *metricsdk.MeterProvider {
+func InitMeter(config *config.TenMsOtelConfig) *metricsdk.MeterProvider {
 	secureOption := otlpmetricgrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
-	if len(config.LxpOtelConfig.InsecureMode) > 0 {
+	if len(config.InsecureMode) > 0 {
 		secureOption = otlpmetricgrpc.WithInsecure()
 	}
 
 	exporter, err := otlpmetricgrpc.New(
 		context.Background(),
 		secureOption,
-		otlpmetricgrpc.WithEndpoint(config.LxpOtelConfig.OtelExporterOtlpEndpoint),
+		otlpmetricgrpc.WithEndpoint(config.OtelExporterOtlpEndpoint),
 	)
 	if err != nil {
 		log.Fatalf("Failed to create exporter: %v", err)
@@ -211,7 +209,7 @@ func InitMeter() *metricsdk.MeterProvider {
 	res, err := resource.New(
 		context.Background(),
 		resource.WithAttributes(
-			attribute.String("service.name", config.LxpConfig.Name),
+			attribute.String("service.name", config.ServiceName),
 			attribute.String("library.language", "go"),
 		),
 	)

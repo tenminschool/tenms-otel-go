@@ -3,11 +3,7 @@ package tracer
 import (
 	"context"
 	"crypto/tls"
-	"log"
-	"strings"
-
-	"github.com/tenminschool/lxp-service/otel/config"
-
+	"github.com/tenminschool/tenms-otel-go/config"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -15,6 +11,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc/credentials"
+	"log"
+	"strings"
 )
 
 func InitTracer(config *config.TenMsOtelConfig) func(context.Context) error {
