@@ -8,6 +8,8 @@ import (
 	"github.com/tenminschool/tenms-otel-go/metrics"
 	"github.com/tenminschool/tenms-otel-go/tracer"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"gorm.io/gorm"
+	"gorm.io/plugin/opentelemetry/tracing"
 )
 
 type TenMsOtel struct {
@@ -24,6 +26,7 @@ func NewTenMsOtel(serviceName string, insecureMode string, OtelExporterOtlpEndpo
 
 func (tenmsOtel *TenMsOtel) Init(
 	Router *gin.Engine,
+	db *gorm.DB,
 ) func(ctx context.Context) {
 	shutDownTracer := tracer.InitTracer(tenmsOtel.tenMsOtelConfig)
 
@@ -32,8 +35,14 @@ func (tenmsOtel *TenMsOtel) Init(
 	meter := meterProvider.Meter(tenmsOtel.tenMsOtelConfig.ServiceName)
 	metrics.GenerateMetrics(meter)
 
-	// Router.Use(otelgin.Middleware(serviceName))
 	RegisterMiddleware(Router, tenmsOtel.tenMsOtelConfig.ServiceName)
+
+	if db != nil {
+		if err := db.Use(tracing.NewPlugin()); err != nil {
+			fmt.Println("error while connecting to db ", err.Error())
+		}
+	}
+
 	fmt.Printf(
 		"Tenms otel initialized with service_name %s, insecure mode %s, OtelExporterOtlpEndpoint %s\n",
 		tenmsOtel.tenMsOtelConfig.ServiceName,
