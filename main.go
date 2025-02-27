@@ -21,10 +21,6 @@ import (
 var tenMsOpenTelemetry *TenMsOtel
 
 func GetTenMsOtel() *TenMsOtel {
-	disableOtel := os.Getenv("DISABLE_OTEL")
-	if disableOtel == "true" {
-		return nil
-	}
 	return tenMsOpenTelemetry
 }
 
