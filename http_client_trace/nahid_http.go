@@ -8,9 +8,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func OtelHttpSpanStart(ctx context.Context, endPointService string) trace.Span {
-	var tracer = otel.Tracer(endPointService)
-	_, span := tracer.Start(ctx, fmt.Sprintf("HTTP %s", endPointService))
+func OtelHttpSpanStart(ctx context.Context, method string) trace.Span {
+	var tracer = otel.Tracer(method)
+	_, span := tracer.Start(ctx, fmt.Sprintf("http-client: %s", method))
 	return span
 }
 
