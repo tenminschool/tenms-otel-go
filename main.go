@@ -41,6 +41,10 @@ func (tenmsOtel *TenMsOtel) Init(
 	Router *gin.Engine,
 	db *gorm.DB,
 ) func(ctx context.Context) {
+	disableOtel := os.Getenv("DISABLE_OTEL")
+	if disableOtel == "true" {
+		return nil
+	}
 	shutDownTracer := tracer.InitTracer(tenmsOtel.config)
 
 	meterProvider := metrics.InitMeter(tenmsOtel.config)
