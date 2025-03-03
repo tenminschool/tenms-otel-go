@@ -14,10 +14,13 @@ func OtelHttpSpanStart(ctx context.Context, method string) trace.Span {
 	return span
 }
 
-func OtelHttpSpanEnd(span trace.Span, url string, status int, message string) {
+func OtelHttpSpanEnd(span trace.Span, url string, status int, message string, err error) {
 	span.SetAttributes(
 		attribute.String("http.url", url),
 		attribute.Int("http.status_code", status),
 		attribute.String("http.request.message", message),
 	)
+	if err != nil {
+		span.RecordError(err)
+	}
 }
