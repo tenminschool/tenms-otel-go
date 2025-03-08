@@ -1,4 +1,4 @@
-package rabbit_mq_trace
+package rabbitmq
 
 import (
 	"context"
