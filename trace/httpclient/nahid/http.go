@@ -2,14 +2,14 @@ package nahid
 
 import (
 	"context"
-	"github.com/nahid/gohttp"
+	"github.com/tenminschool/gohttp"
 	"github.com/tenminschool/tenms-otel-go/trace/httpclient/intrumentation"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
-func UseOtelBeforeRequestMiddleware(ctx context.Context) func(request *gohttp.Request) error {
+func UseOtelBeforeRequestHook(ctx context.Context) gohttp.BeforeRequestHook {
 	return func(request *gohttp.Request) error {
 		traceContext, _ := otel.Tracer("http-client").
 			Start(ctx, "http-client", trace.WithSpanKind(trace.SpanKindClient))
@@ -20,7 +20,7 @@ func UseOtelBeforeRequestMiddleware(ctx context.Context) func(request *gohttp.Re
 	}
 }
 
-func UseOtelAfterResponseMiddleware(ctx context.Context) func(response *gohttp.Response) error {
+func UseOtelAfterResponseHook(ctx context.Context) gohttp.AfterResponseHook {
 	return func(response *gohttp.Response) error {
 		span := trace.SpanFromContext(ctx.Value("traceContext").(context.Context))
 		intrumentation.InstrumentResponse(span, response.GetResp())
@@ -30,7 +30,7 @@ func UseOtelAfterResponseMiddleware(ctx context.Context) func(response *gohttp.R
 	}
 }
 
-func UseOtelOnErrorHook(ctx context.Context) func(request *gohttp.Request, err error) {
+func UseOtelOnErrorHook(ctx context.Context) gohttp.ErrorHook {
 	return func(request *gohttp.Request, err error) {
 		span := trace.SpanFromContext(ctx.Value("traceContext").(context.Context))
 		span.RecordError(err)
