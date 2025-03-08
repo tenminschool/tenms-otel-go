@@ -15,14 +15,14 @@ func UseOtelBeforeRequestHook(ctx context.Context) gohttp.BeforeRequestHook {
 			Start(ctx, "http-client", trace.WithSpanKind(trace.SpanKindClient))
 
 		otel.GetTextMapPropagator().Inject(traceContext, nil)
-		ctx = context.WithValue(ctx, "traceContext", traceContext)
+		request.SetContext(traceContext)
 		return nil
 	}
 }
 
-func UseOtelAfterResponseHook(ctx context.Context) gohttp.AfterResponseHook {
+func UseOtelAfterResponseHook() gohttp.AfterResponseHook {
 	return func(response *gohttp.Response) error {
-		span := trace.SpanFromContext(ctx.Value("traceContext").(context.Context))
+		span := trace.SpanFromContext(response.GetResp().Request.Context())
 		intrumentation.InstrumentResponse(span, response.GetResp())
 
 		span.End()
@@ -30,9 +30,9 @@ func UseOtelAfterResponseHook(ctx context.Context) gohttp.AfterResponseHook {
 	}
 }
 
-func UseOtelOnErrorHook(ctx context.Context) gohttp.ErrorHook {
+func UseOtelOnErrorHook() gohttp.ErrorHook {
 	return func(request *gohttp.Request, err error) {
-		span := trace.SpanFromContext(ctx.Value("traceContext").(context.Context))
+		span := trace.SpanFromContext(request.Context())
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
