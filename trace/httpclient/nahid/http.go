@@ -2,6 +2,7 @@ package nahid
 
 import (
 	"context"
+	"fmt"
 	"github.com/tenminschool/gohttp"
 	"github.com/tenminschool/tenms-otel-go/trace/httpclient/intrumentation"
 	"go.opentelemetry.io/otel"
@@ -16,15 +17,15 @@ func UseOtelBeforeRequestHook(ctx context.Context) gohttp.BeforeRequestHook {
 
 		otel.GetTextMapPropagator().Inject(traceContext, nil)
 		request.SetContext(traceContext)
+		fmt.Println("Span Created")
 		return nil
 	}
 }
 
 func UseOtelAfterResponseHook() gohttp.AfterResponseHook {
-	return func(response *gohttp.Response) error {
-		span := trace.SpanFromContext(response.GetResp().Request.Context())
+	return func(request *gohttp.Request, response *gohttp.Response) error {
+		span := trace.SpanFromContext(request.Context())
 		intrumentation.InstrumentResponse(span, response.GetResp())
-
 		span.End()
 		return nil
 	}
