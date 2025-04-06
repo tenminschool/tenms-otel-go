@@ -29,8 +29,7 @@ func main() {
     artifact.New()
     config.Register() // will load the config file
     newrelic.Setup()
-
-    artifact.NoSqlConnectionWithOtelMonitoring()
+	
     rabbit_mq.RabbitMQConnection()
 
     cleanup := otel.Boot(Config.GetString("App.Name"),
@@ -57,4 +56,40 @@ APP_NAME=demo-service
 INSECURE_MODE=true
 OTEL_EXPORTER_OTLP_ENDPOINT=
 DISABLE_OTEL=false
+```
+
+## Get current span from gin context
+1. Use the following line for getting current span context
+```go
+c.Request.Context()
+```
+
+## MongoDB Setup
+1. Add the following line while init mongo connection
+```go
+ artifact.NoSqlConnectionWithOtelMonitoring()
+```
+2. Pass the current span context whenever you are doing any operation with mongo
+example
+```go
+result, err := models.VideoCollection.Collection.InsertOne(ctx, video)
+````
+here `ctx` is the current span context
+
+## RabbitMQ Setup
+### Publisher
+1. Add the following line before publishing to rabbitmq
+```go
+span, _ := tenmsOtel.TraceRabbitMqPublisher(exchange, routingKey, ctx)
+defer span.End()
+```
+### Consumer
+1. Add the following line before consuming from rabbitmq
+```go
+span, spanCtx := rabbitMqTrace.TraceRabbitMqConsumer(
+				"queue name", //read it from env
+				"ExamSessionConsumer", //consumer name
+				context.TODO(), // pass the context if you have
+			)
+defer span.End()
 ```
