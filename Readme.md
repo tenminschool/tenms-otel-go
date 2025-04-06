@@ -53,35 +53,8 @@ func main() {
 ```
 3. Add the following env's in the .env file.
 ```go
+APP_NAME=demo-service
 INSECURE_MODE=true
 OTEL_EXPORTER_OTLP_ENDPOINT=
 DISABLE_OTEL=false
-```
-
-## Tracing Http Client Calls
-#### The minimum version required for `@nestjs/axios` should be >= '4.0.0'.
-1. Add the following line in the `onModuleInit()` function at HttpClientsModule class file.
-```javascript
-   TenmsOtel.setupHttpClientInterceptors(this.httpService.axiosRef);
-```
-full Example
-```javascript
-import { Global, Module, OnModuleInit } from '@nestjs/common';
-import { HttpModule, HttpService } from '@nestjs/axios';
-import * as TenmsOtel from '@tenminschool/tenms-otel-node';
-
-@Global()
-@Module({
-  imports: [HttpModule],
-  providers: [],
-  exports: [],
-})
-export class HttpClientsModule implements OnModuleInit {
-  constructor(private httpService: HttpService) {}
-
-  onModuleInit() {
-    TenmsOtel.setupHttpClientInterceptors(this.httpService.axiosRef);
-  }
-}
-
 ```
