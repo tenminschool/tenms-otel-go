@@ -14,14 +14,19 @@ go get github.com/tenminschool/tenms-otel-go
 
 
 ## Basic Usage (Gin)
-1. Add the following line in the `main()` function at main.go file before `routes.Register()` 
+1. Add the following line in the `main()` function at main.go file
 ```go
- cleanup := otel.Boot(Config.GetString("App.Name"),
-    Config.GetString("App.InsecureMode"),
-    Config.GetString("App.OtlpExporterOtlpEndpoint")).
+ cleanup := otel.Boot(os.Getenv("APP_NAME"),
+    os.Getenv("INSECURE_MODE"),
+    os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")).
 	 Init(artifact.Router, nil)
 defer cleanup(context.TODO())
 ```
+2. add the following line before `routes.Register()`
+```go
+artifact.Router.Use(otel.GetTenMsOtel().TraceMiddleware())
+```
+
 full `main` func will look like this:
 ```go
 func main() {
@@ -32,13 +37,12 @@ func main() {
 	
     rabbit_mq.RabbitMQConnection()
 
-    cleanup := otel.Boot(Config.GetString("App.Name"),
-        Config.GetString("App.InsecureMode"),
-        Config.GetString("App.OtlpExporterOtlpEndpoint")).Init(
-        artifact.Router,
-        nil,
-    )
-    defer cleanup(context.TODO())
+    cleanup := otel.Boot(os.Getenv("APP_NAME"), 
+		os.Getenv("INSECURE_MODE"), 
+		os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")).
+        Init(artifact.Router, nil)
+    
+	defer cleanup(context.TODO())
 
     artifact.Router.Use(otel.GetTenMsOtel().TraceMiddleware())
 
@@ -64,7 +68,7 @@ DISABLE_OTEL=false
 c.Request.Context()
 ```
 
-## MongoDB Setup
+## MongoDB Tracing
 1. Add the following line while init mongo connection
 ```go
  artifact.NoSqlConnectionWithOtelMonitoring()
@@ -76,7 +80,7 @@ result, err := models.VideoCollection.Collection.InsertOne(ctx, video)
 ````
 here `ctx` is the current span context
 
-## RabbitMQ Setup
+## RabbitMQ Tracing
 ### Publisher
 1. Add the following line before publishing to rabbitmq
 ```go
@@ -92,4 +96,27 @@ span, spanCtx := rabbitMqTrace.TraceRabbitMqConsumer(
 				context.TODO(), // pass the context if you have
 			)
 defer span.End()
+```
+## Tracing Http Client Calls
+### Resty Client(Recommended)
+1. Add the following line during resty client setup
+```go
+client := resty.New()
+client.OnBeforeRequest(tenmsOtelhttpClientTrace.UseOtelBeforeRequestMiddleware(ctx)) // pass current span context
+client.OnAfterResponse(tenmsOtelhttpClientTrace.UseOtelAfterResponseMiddleware())
+client.OnError(tenmsOtelhttpClientTrace.UseOtelOnErrorHook())
+```
+### Nahid Http Client
+This library does not support hooks. We fork the repo from and added the hooks. You can use that library for now.
+1. Install the library
+```go
+go get github.com/tenminschool/gohttp
+```
+2. Replace all the `github.com/nahid/gohttp` import statements with `github.com/tenminschool/gohttp`
+3. Add the following line during nahid http req setup
+```go
+req := gohttp.NewRequest()
+req.OnBeforeRequest(nahid.UseOtelBeforeRequestHook(ctx)) // pass current span context
+req.OnAfterResponse(nahid.UseOtelAfterResponseHook())
+req.OnError(nahid.UseOtelOnErrorHook())
 ```
