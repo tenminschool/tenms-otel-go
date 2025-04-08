@@ -48,7 +48,7 @@ func InitTracer(config *config.TenMsOtelConfig) func(context.Context) error {
 
 	otel.SetTracerProvider(
 		sdktrace.NewTracerProvider(
-			sdktrace.WithSampler(sdktrace.AlwaysSample()),
+			sdktrace.WithSampler(sdktrace.TraceIDRatioBased(config.SamplingRatio)),
 			sdktrace.WithBatcher(exporter),
 			sdktrace.WithResource(resources),
 		),

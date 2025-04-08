@@ -28,11 +28,12 @@ type TenMsOtel struct {
 	config *config.TenMsOtelConfig
 }
 
-func Boot(serviceName string, insecureMode string, OtelExporterOtlpEndpoint string) *TenMsOtel {
+func Boot(serviceName string, insecureMode string, OtelExporterOtlpEndpoint string, samplingRatio float64) *TenMsOtel {
 	tenMsOpenTelemetry = &TenMsOtel{config: &config.TenMsOtelConfig{
 		ServiceName:              serviceName,
 		InsecureMode:             insecureMode,
 		OtelExporterOtlpEndpoint: OtelExporterOtlpEndpoint,
+		SamplingRatio:            samplingRatio,
 	}}
 	return tenMsOpenTelemetry
 }
